@@ -12,6 +12,9 @@ permissions:
   contents: read
   checks: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -41,7 +44,7 @@ jobs:
       - name: Run tests
         run: |
           mkdir -p reports
-          npm test -- --reporter=default --reporter=junit --outputFile.junit=reports/vitest-junit.xml
+          npm test -- --reporter=verbose --reporter=junit --outputFile=reports/vitest-junit.xml
 
       # 保留原始 XML 作為 artifact，方便下載查閱
       - name: Upload test report artifact
