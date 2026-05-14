@@ -1,0 +1,62 @@
+name: CI Pipeline (b12705030)
+
+# 觸發條件：任何分支 push 時自動執行
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+# dorny/test-reporter 需要 checks: write 權限才能在 PR/commit 頁面顯示測試結果
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 1. TypeScript 型別檢查 — tsc --noEmit，有型別錯誤就失敗
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
+      # 2. Prettier 格式檢查 — 格式不符就失敗
+      - name: Prettier check
+        run: npm run format:check
+
+      # 3. 執行測試，同時輸出 JUnit XML 供後續步驟使用
+      - name: Run tests
+        run: |
+          mkdir -p reports
+          npm test -- --reporter=default --reporter=junit --outputFile.junit=reports/vitest-junit.xml
+
+      # 保留原始 XML 作為 artifact，方便下載查閱
+      - name: Upload test report artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-report
+          path: reports/
+          if-no-files-found: error
+
+      # 將測試結果顯示於 GitHub Actions 結果頁面（Checks 分頁）
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Vitest Tests
+          path: reports/vitest-junit.xml
+          reporter: java-junit
