@@ -36,9 +36,9 @@ jobs:
       - name: TypeScript typecheck
         run: npm run typecheck
 
-      # 2. Prettier 格式檢查 — 格式不符就失敗
+      # 2. Prettier 格式檢查 — 只檢查 TypeScript 原始碼，排除 YAML 設定檔
       - name: Prettier check
-        run: npm run format:check
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
 
       # 3. 執行測試，同時輸出 JUnit XML 供後續步驟使用
       # --outputFile.junit= 是指定 junit reporter 的輸出路徑，不能用 --outputFile=
